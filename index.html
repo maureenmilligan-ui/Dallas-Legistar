@@ -1,100 +1,596 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dallas Public Investment Explorer</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body { background: #0C1923; color: #C8D8E8; font-family: 'DM Mono', 'Fira Mono', 'Courier New', monospace; }
-    #root { min-height: 100vh; }
-    input:focus { border-color: #C9A84C !important; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0C1923; }
-    ::-webkit-scrollbar-thumb { background: #2A4560; border-radius: 3px; }
-    a { color: #C9A84C; }
-    #password-gate {
-      position: fixed; inset: 0; background: #0C1923;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9999;
-    }
-    #password-gate .box {
-      background: #0F2233; border: 1px solid #1E3448;
-      border-top: 3px solid #C9A84C;
-      border-radius: 8px; padding: 40px 36px; width: 100%; max-width: 360px;
-      text-align: center;
-    }
-    #password-gate h2 {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 20px; color: #EFF6FF; margin-bottom: 6px;
-    }
-    #password-gate p { font-size: 11px; color: #5A7A96; margin-bottom: 24px; }
-    #password-gate input {
-      width: 100%; background: #112030; border: 1px solid #2A4560;
-      border-radius: 6px; padding: 10px 14px; color: #EFF6FF;
-      font-family: 'DM Mono', monospace; font-size: 14px;
-      outline: none; text-align: center; letter-spacing: 0.1em;
-      margin-bottom: 12px;
-    }
-    #password-gate button {
-      width: 100%; background: #C9A84C; color: #0C1923; border: none;
-      border-radius: 6px; padding: 11px; font-family: 'DM Mono', monospace;
-      font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em;
-    }
-    #password-gate .error { color: #E05C5C; font-size: 11px; margin-top: 10px; min-height: 16px; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dallas Public Investment Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#0C1923;color:#C8D8E8;font-family:'DM Mono','Courier New',monospace;font-size:13px}
+a{color:#C9A84C}
+input,button{font-family:'DM Mono','Courier New',monospace}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0C1923}
+::-webkit-scrollbar-thumb{background:#2A4560;border-radius:3px}
+
+/* Password gate */
+#gate{position:fixed;inset:0;background:#0C1923;display:flex;align-items:center;justify-content:center;z-index:9999}
+.gate-box{background:#0F2233;border:1px solid #1E3448;border-top:3px solid #C9A84C;border-radius:8px;padding:40px 32px;width:100%;max-width:340px;text-align:center}
+.gate-box h2{font-family:'Playfair Display',serif;font-size:20px;color:#EFF6FF;margin-bottom:6px}
+.gate-box p{font-size:11px;color:#5A7A96;margin-bottom:24px}
+.gate-box input{width:100%;background:#112030;border:1px solid #2A4560;border-radius:6px;padding:10px 14px;color:#EFF6FF;font-size:14px;outline:none;text-align:center;letter-spacing:0.1em;margin-bottom:12px}
+.gate-box button{width:100%;background:#C9A84C;color:#0C1923;border:none;border-radius:6px;padding:11px;font-size:13px;font-weight:700;cursor:pointer}
+#gate-error{color:#E05C5C;font-size:11px;margin-top:10px;min-height:16px}
+
+/* App */
+#app{display:none}
+#header{background:linear-gradient(160deg,#0F2233 0%,#0C1923 100%);border-bottom:1px solid #1E3448;padding:24px 20px 20px}
+.eyebrow{font-size:10px;letter-spacing:0.2em;color:#C9A84C;text-transform:uppercase;margin-bottom:6px}
+h1{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#EFF6FF;margin-bottom:4px}
+.subtitle{font-size:11px;color:#7A9BB5}
+#search-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+#keyword{flex:1;min-width:0;background:#112030;border:1px solid #2A4560;border-radius:6px;padding:10px 12px;color:#EFF6FF;font-size:13px;outline:none}
+#keyword:focus{border-color:#C9A84C}
+.btn-gold{background:#C9A84C;color:#0C1923;border:none;border-radius:6px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-gold:disabled{opacity:0.5;cursor:not-allowed}
+.btn-outline{background:transparent;color:#C9A84C;border:1px solid #C9A84C;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-outline:disabled{opacity:0.5;cursor:not-allowed}
+.btn-sm{background:#112030;color:#7A9BB5;border:1px solid #2A4560;border-radius:4px;padding:5px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
+.btn-sm-gold{background:#C9A84C22;color:#C9A84C;border:1px solid #C9A84C55;border-radius:4px;padding:5px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
+#error-msg{color:#E05C5C;font-size:12px;margin-top:10px}
+
+#body{padding:0 20px}
+#stats-bar{display:flex;gap:20px;padding:14px 0;border-bottom:1px solid #1E3448;flex-wrap:wrap;align-items:center}
+.stat-label{font-size:10px;color:#5A7A96;letter-spacing:0.1em;text-transform:uppercase}
+.stat-val{font-family:'Playfair Display',serif;font-size:18px;color:#EFF6FF;font-weight:700}
+
+#tabs{display:flex;border-bottom:1px solid #1E3448}
+.tab{padding:10px 16px;font-size:12px;cursor:pointer;border:none;background:transparent;color:#5A7A96;border-bottom:2px solid transparent;font-weight:400}
+.tab.active{color:#C9A84C;border-bottom:2px solid #C9A84C;font-weight:700}
+.tab:disabled{opacity:0.4;cursor:not-allowed}
+
+#filter-row{display:flex;gap:6px;padding:12px 0;flex-wrap:wrap;align-items:center}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid #2A4560;background:transparent;color:#7A9BB5}
+.chip.active{border-color:#C9A84C;background:#C9A84C22;color:#C9A84C}
+
+.note{font-size:11px;color:#3A5A76;line-height:1.6;padding:8px 0}
+
+#table-wrap{overflow-x:auto;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:10px;text-align:left;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5A7A96;border-bottom:1px solid #1E3448;cursor:pointer;user-select:none;white-space:nowrap}
+td{padding:10px;border-bottom:1px solid #152535;vertical-align:top;line-height:1.5}
+tr.data-row{cursor:pointer}
+tr.data-row:hover td{background:#0F2233}
+tr.data-row.open td{background:#0F2233}
+
+.expand-box{background:#0F2233;border-bottom:1px solid #1E3448;padding:16px 20px}
+.card-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#5A7A96;margin-bottom:6px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.info-item .val{color:#C8D8E8;font-size:12px}
+.file-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #152535;flex-wrap:wrap}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.file-name{flex:1;min-width:100px;color:#C8D8E8;font-size:12px}
+
+.badge{border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;letter-spacing:0.04em;white-space:nowrap}
+.pill{display:inline-block;border-radius:4px;padding:3px 8px;font-size:11px;margin:2px 3px 2px 0}
+
+#empty-state{padding:60px 20px;text-align:center;color:#3A5A76}
+#empty-state .icon{font-size:40px;margin-bottom:12px}
+
+/* Analysis tab */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:16px}
+.summary-card{background:#0F2233;border:1px solid #1E3448;border-radius:6px;padding:14px 16px}
+.narrative-card{background:#0F2233;border:1px solid #1E3448;border-left:3px solid #C9A84C;border-radius:6px;padding:20px 24px;margin-top:20px;line-height:1.8}
+.narrative-card p{margin-bottom:14px;color:#C8D8E8;font-size:13px}
+.gold-card{background:#0C1923;border:1px solid #1E3448;border-left:3px solid #C9A84C;border-radius:6px;padding:16px 18px;margin-top:14px}
+.spacer{height:40px}
+</style>
 </head>
 <body>
-<div id="password-gate">
-  <div class="box">
+
+<!-- Password Gate -->
+<div id="gate">
+  <div class="gate-box">
     <h2>Dallas Investment Explorer</h2>
     <p>Enter password to continue</p>
-    <input type="password" id="pw-input" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')checkPw()" autofocus />
+    <input type="password" id="pw-input" placeholder="••••••••" />
     <button onclick="checkPw()">Enter</button>
-    <div class="error" id="pw-error"></div>
+    <div id="gate-error"></div>
   </div>
 </div>
-<div id="root" style="display:none"></div>
+
+<!-- App -->
+<div id="app">
+  <div id="header">
+    <div class="eyebrow">Dallas City Council · Legistar</div>
+    <h1>Public Investment Explorer</h1>
+    <p class="subtitle">Search legislative records · fetch source documents · extract subsidy details with AI</p>
+    <div id="search-row">
+      <input type="text" id="keyword" placeholder="Redbird, TIF, CDBG, Oak Cliff, tax abatement…"/>
+      <button class="btn-gold" id="search-btn" onclick="doSearch()">Search</button>
+      <button class="btn-outline" id="bulk-btn" onclick="runBulkAnalysis()" disabled>✦ Bulk Analysis</button>
+    </div>
+    <div id="error-msg"></div>
+  </div>
+
+  <div id="body">
+    <div id="stats-bar" style="display:none">
+      <div><div class="stat-label">Records</div><div class="stat-val" id="stat-count">0</div></div>
+      <div id="stat-amounts-wrap" style="display:none"><div class="stat-label">With Amounts</div><div class="stat-val" id="stat-amounts">—</div></div>
+      <div id="stat-type-wrap" style="display:none"><div class="stat-label">Top Type</div><div id="stat-type" style="font-size:13px;color:#EFF6FF;padding-top:2px"></div></div>
+      <div style="flex:1"></div>
+      <div style="font-size:11px;color:#3A5A76">Click any row to fetch attachments</div>
+    </div>
+
+    <div id="tabs" style="display:none">
+      <button class="tab active" onclick="switchTab('table')">Data Table</button>
+      <button class="tab" id="analysis-tab" onclick="switchTab('analysis')" disabled>Bulk Analysis (run above)</button>
+    </div>
+
+    <div id="table-panel">
+      <div id="filter-row" style="display:none"></div>
+      <div class="note" id="table-note"></div>
+      <div id="table-wrap">
+        <table id="data-table">
+          <thead id="table-head"></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="analysis-panel" style="display:none"></div>
+
+    <div id="empty-state">
+      <div class="icon">⌕</div>
+      <p style="font-size:14px;margin-bottom:8px">Enter a keyword to search Dallas city records</p>
+      <p style="font-size:12px"><em>Try: Redbird · affordable housing · TIF · CDBG · Oak Cliff · tax abatement</em></p>
+    </div>
+
+    <div class="spacer"></div>
+  </div>
+</div>
+
 <script>
-  function checkPw() {
-    const val = document.getElementById('pw-input').value;
-    if (val === '12345678') {
-      document.getElementById('password-gate').style.display = 'none';
-      document.getElementById('root').style.display = 'block';
-    } else {
-      document.getElementById('pw-error').textContent = 'Incorrect password.';
-      document.getElementById('pw-input').value = '';
-      document.getElementById('pw-input').focus();
+// ── Password ──────────────────────────────────────────────────────────────────
+document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
+function checkPw() {
+  if (document.getElementById('pw-input').value === '12345678') {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('keyword').focus();
+  } else {
+    document.getElementById('gate-error').textContent = 'Incorrect password.';
+    document.getElementById('pw-input').value = '';
+  }
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const LEGISTAR = 'https://webapi.legistar.com/v1/dallas';
+const PROXY = 'https://corsproxy.io/?';
+const BASE = url => PROXY + encodeURIComponent(url);
+const SUBSIDY_TYPES = ['Grant','Loan','TIF','Tax Abatement','Tax Exemption','Tax Rebate','Tax Credit','Bond','Contract','Appropriation','CDBG','HOME','Section 8','Other'];
+const COLORS = {
+  'Grant':'#4AC4A0','Loan':'#4A9ABA','TIF':'#C9A84C','Tax Abatement':'#E07B4A',
+  'Tax Exemption':'#B07BC4','Tax Rebate':'#E05C5C','Tax Credit':'#7BC47F',
+  'Bond':'#C44A7B','Contract':'#84C4C4','Appropriation':'#C4A44A',
+  'CDBG':'#6BC47B','HOME':'#4A7BC4','Section 8':'#C4844A','Other':'#6B8090'
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let matters = [];
+let enriched = [];
+let analysisData = null;
+let attachments = {};   // matterId → {status, files[]}
+let docAnalysis = {};   // matterId → {status, result}
+let expandedRow = null;
+let filterType = 'All';
+let sortKey = 'date';
+let sortDir = 'desc';
+let activeTab = 'table';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmtDate = s => s ? new Date(s).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
+const legistarUrl = m => `https://dallas.legistar.com/LegislationDetail.aspx?ID=${m.MatterId}&GUID=${m.MatterGuid}`;
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function badge(type) {
+  const c = COLORS[type] || '#6B8090';
+  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}55">${esc(type||'—')}</span>`;
+}
+function pill(text, color) {
+  return `<span class="pill" style="background:${color}22;color:${color};border:1px solid ${color}44">${esc(text)}</span>`;
+}
+
+async function callClaude(messages, system, maxTokens=2000) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTokens, system, messages })
+  });
+  const d = await r.json();
+  return d.content?.find(c=>c.type==='text')?.text || '';
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+document.getElementById('keyword').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+
+async function doSearch() {
+  const q = document.getElementById('keyword').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('search-btn');
+  btn.textContent = 'Searching…'; btn.disabled = true;
+  document.getElementById('error-msg').textContent = '';
+  document.getElementById('empty-state').style.display = 'none';
+  matters = []; enriched = []; analysisData = null;
+  attachments = {}; docAnalysis = {}; expandedRow = null;
+  filterType = 'All'; sortKey = 'date'; sortDir = 'desc';
+
+  try {
+    const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear()-12);
+    const ds = cutoff.toISOString().split('T')[0];
+    const url = BASE(`${LEGISTAR}/matters?$filter=contains(MatterTitle,'${encodeURIComponent(q)}') and MatterIntroDate ge datetime'${ds}T00:00:00'&$top=1000&$orderby=MatterIntroDate desc`);
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`Legistar error ${r.status}`);
+    matters = await r.json();
+    enriched = matters.map(m=>({...m,_ai:null}));
+    renderAll();
+  } catch(e) {
+    document.getElementById('error-msg').textContent = '⚠ ' + e.message;
+    document.getElementById('empty-state').style.display = 'block';
+  } finally {
+    btn.textContent = 'Search'; btn.disabled = false;
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  document.getElementById('stats-bar').style.display = 'flex';
+  document.getElementById('tabs').style.display = 'flex';
+  document.getElementById('stat-count').textContent = matters.length.toLocaleString();
+  document.getElementById('bulk-btn').disabled = matters.length === 0;
+
+  if (analysisData) {
+    document.getElementById('stat-amounts-wrap').style.display = 'block';
+    document.getElementById('stat-type-wrap').style.display = 'block';
+    document.getElementById('stat-amounts').textContent = analysisData.summary.amountsFound ?? '—';
+    const topType = Object.entries(analysisData.summary.bySubsidyType||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+    document.getElementById('stat-type').textContent = topType;
+    document.getElementById('analysis-tab').disabled = false;
+    document.getElementById('analysis-tab').textContent = 'Bulk Analysis';
+  }
+
+  switchTab(activeTab);
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[tab==='table'?0:1].classList.add('active');
+  document.getElementById('table-panel').style.display = tab==='table' ? 'block' : 'none';
+  document.getElementById('analysis-panel').style.display = tab==='analysis' ? 'block' : 'none';
+  if (tab==='table') renderTable();
+  if (tab==='analysis') renderAnalysis();
+}
+
+function renderTable() {
+  // Filter chips
+  const fr = document.getElementById('filter-row');
+  if (analysisData) {
+    fr.style.display = 'flex';
+    const activeTypes = SUBSIDY_TYPES.filter(t => enriched.some(m=>m._ai?.subsidyType===t));
+    fr.innerHTML = ['All',...activeTypes].map(t =>
+      `<button class="chip${filterType===t?' active':''}" onclick="setFilter('${t}')">${esc(t)}</button>`
+    ).join('');
+  } else {
+    fr.style.display = 'none';
+  }
+
+  const rows = getFilteredSorted();
+  document.getElementById('table-note').textContent = analysisData
+    ? `${rows.length} records · Click a row to fetch source documents for precise amounts and terms.`
+    : `${rows.length} records · Click any row to load attachments. Run Bulk Analysis to classify by subsidy type.`;
+
+  // Header
+  const hasAi = !!analysisData;
+  document.getElementById('table-head').innerHTML = `<tr>
+    <th onclick="setSort('date')">Date ${sortArrow('date')}</th>
+    <th onclick="setSort('title')">Title ${sortArrow('title')}</th>
+    <th>Type</th>
+    ${hasAi ? `<th onclick="setSort('type')">Subsidy ${sortArrow('type')}</th>` : ''}
+    ${hasAi ? `<th onclick="setSort('recip')">Recipient ${sortArrow('recip')}</th>` : ''}
+    ${hasAi ? `<th>$</th>` : ''}
+    <th>Docs</th>
+    <th>Status</th>
+  </tr>`;
+
+  // Body
+  let html = '';
+  for (const m of rows) {
+    const mid = m.MatterId;
+    const att = attachments[mid];
+    const docAn = docAnalysis[mid];
+    const isOpen = expandedRow === mid;
+    const docsCell = !att ? '—'
+      : att.status==='loading' ? '<span style="color:#C9A84C">…</span>'
+      : att.status==='error'   ? '<span style="color:#E05C5C">⚠</span>'
+      : (() => {
+          const n=att.files.length, p=att.files.filter(f=>f.status==='parsed').length;
+          const color = p>0?'#4AC4A0':'#7A9BB5';
+          return `<span style="color:${color}">${n} file${n!==1?'s':''}${p>0?` · ${p} read`:''}${docAn?.status==='done'?' ✦':''}</span>`;
+        })();
+
+    html += `<tr class="data-row${isOpen?' open':''}" onclick="toggleRow(${mid})" data-mid="${mid}">
+      <td style="white-space:nowrap;color:#7A9BB5">${fmtDate(m.MatterIntroDate)}</td>
+      <td style="max-width:280px;color:#D8E8F8">${esc(m.MatterTitle)}</td>
+      <td style="color:#7A9BB5;font-size:11px;white-space:nowrap">${esc(m.MatterTypeName||'—')}</td>
+      ${hasAi ? `<td>${m._ai ? badge(m._ai.subsidyType) : '<span style="color:#3A5A76">—</span>'}</td>` : ''}
+      ${hasAi ? `<td style="font-size:11px;color:#C8D8E8;max-width:140px">${esc(m._ai?.recipient||'')|| '<span style="color:#3A5A76">—</span>'}</td>` : ''}
+      ${hasAi ? `<td style="color:${m._ai?.amount?'#4AC4A0':'#3A5A76'};white-space:nowrap">${esc(m._ai?.amount||'—')}</td>` : ''}
+      <td>${docsCell}</td>
+      <td style="font-size:11px;color:#5A7A96;white-space:nowrap">${esc(m.MatterStatusName||'—')}</td>
+    </tr>`;
+
+    if (isOpen) {
+      html += `<tr><td colspan="${hasAi?8:5}" style="padding:0">${buildExpandHtml(m)}</td></tr>`;
     }
   }
-</script>
+  document.getElementById('table-body').innerHTML = html;
 
-<script type="text/babel">
-const { useState, useCallback } = React;
+  // Bind expand buttons
+  document.querySelectorAll('[data-fetch-doc]').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); fetchDocument(+btn.dataset.mid, +btn.dataset.fid, btn.dataset.url); };
+  });
+  document.querySelectorAll('[data-analyze-docs]').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); analyzeDocuments(+btn.dataset.mid); };
+  });
+}
 
-// ─── PDF.js ───────────────────────────────────────────────────────────────────
+function buildExpandHtml(matter) {
+  const mid = matter.MatterId;
+  const att = attachments[mid];
+  const docAn = docAnalysis[mid];
+  const ai = matter._ai;
+
+  let html = `<div class="expand-box">`;
+
+  if (ai) {
+    html += `<div class="info-grid">
+      <div class="info-item"><div class="card-label">Purpose</div><div class="val">${esc(ai.purpose||'—')}</div></div>
+      <div class="info-item"><div class="card-label">Amount in title</div><div class="val" style="color:${ai.amount?'#4AC4A0':'#3A5A76'}">${esc(ai.amount||'—')}</div></div>
+      <div class="info-item"><div class="card-label">AI confidence</div><div style="font-size:11px;color:${{high:'#4AC4A0',medium:'#C9A84C',low:'#E05C5C'}[ai.confidence]||'#6B8090'}">● ${esc(ai.confidence||'—')}</div></div>
+    </div>`;
+  }
+
+  html += `<div class="card-label" style="margin-bottom:8px">Source Documents</div>`;
+
+  if (!att) {
+    html += `<p style="color:#5A7A96;font-size:12px">Loading attachment list…</p>`;
+  } else if (att.status==='loading') {
+    html += `<p style="color:#5A7A96;font-size:12px">Fetching…</p>`;
+  } else if (att.status==='error') {
+    html += `<p style="color:#E05C5C;font-size:12px">⚠ ${esc(att.error)}</p>`;
+  } else if (att.files.length===0) {
+    html += `<p style="color:#3A5A76;font-size:12px">No attachments on this matter.</p>`;
+  } else {
+    for (const f of att.files) {
+      const dotColor = {idle:'#3A5A76',fetching:'#C9A84C',parsed:'#4AC4A0',blocked:'#E05C5C'}[f.status]||'#3A5A76';
+      let action = '';
+      if (f.status==='idle')     action = `<button class="btn-sm" data-fetch-doc data-mid="${mid}" data-fid="${f.id}" data-url="${esc(f.url)}">Fetch PDF</button>`;
+      if (f.status==='fetching') action = `<span style="color:#C9A84C;font-size:11px">Downloading…</span>`;
+      if (f.status==='parsed')   action = `<span style="color:#4AC4A0;font-size:11px">✓ ${Math.round((f.text?.length||0)/1000)}k chars</span>`;
+      if (f.status==='blocked')  action = `<span style="color:#E05C5C;font-size:11px">CORS blocked</span>`;
+      html += `<div class="file-row">
+        <div class="dot" style="background:${dotColor}"></div>
+        <span class="file-name">${esc(f.name)}</span>
+        ${action}
+        <a href="${esc(f.url)}" target="_blank" rel="noreferrer" style="font-size:11px;text-decoration:none" onclick="event.stopPropagation()">↗ Open</a>
+      </div>`;
+    }
+    if (att.files.some(f=>f.status==='parsed')) {
+      const analyzing = docAn?.status==='analyzing';
+      html += `<div style="margin-top:12px"><button class="btn-sm-gold" data-analyze-docs data-mid="${mid}" ${analyzing?'disabled':''}>${analyzing?'Analyzing…':'✦ Analyze documents with AI'}</button></div>`;
+    }
+    if (att.files.every(f=>f.status==='blocked')) {
+      html += `<p style="font-size:11px;color:#3A5A76;margin-top:8px">Files are CORS-blocked — use ↗ Open links to read documents in Legistar.</p>`;
+    }
+  }
+
+  if (docAn?.status==='done' && docAn.result) {
+    const r = docAn.result;
+    html += `<div class="gold-card">
+      <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#C9A84C;margin-bottom:14px">✦ Document Analysis</div>
+      <div class="info-grid">
+        ${r.subsidyType ? `<div><div class="card-label">Subsidy Type</div><div>${badge(r.subsidyType)}</div></div>` : ''}
+        ${r.recipient   ? `<div><div class="card-label">Recipient</div><div class="val">${esc(r.recipient)}</div></div>` : ''}
+        <div><div class="card-label">Amount</div><div style="color:${r.amount?'#4AC4A0':'#3A5A76'};font-weight:600">${esc(r.amount||'Not found')}</div></div>
+        ${r.purpose     ? `<div><div class="card-label">Purpose</div><div class="val">${esc(r.purpose)}</div></div>` : ''}
+        ${r.term        ? `<div><div class="card-label">Term</div><div class="val">${esc(r.term)}</div></div>` : ''}
+        ${r.location    ? `<div><div class="card-label">Location</div><div class="val">${esc(r.location)}</div></div>` : ''}
+        ${r.councilDistrict ? `<div><div class="card-label">District</div><div class="val">District ${esc(r.councilDistrict)}</div></div>` : ''}
+      </div>
+      ${r.amountBreakdown?.length ? `<div style="margin-top:12px"><div class="card-label">Amount Breakdown</div>${r.amountBreakdown.map(a=>pill(a,'#4AC4A0')).join('')}</div>` : ''}
+      ${r.conditions?.length ? `<div style="margin-top:12px"><div class="card-label">Conditions</div>${r.conditions.map(c=>`<div style="font-size:12px;color:#C8D8E8;margin-bottom:4px">· ${esc(c)}</div>`).join('')}</div>` : ''}
+      ${r.summary ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid #1E3448"><div class="card-label">Summary</div><p style="font-size:12px;color:#C8D8E8;line-height:1.75;margin:0">${esc(r.summary)}</p></div>` : ''}
+    </div>`;
+  }
+  if (docAn?.status==='error') {
+    html += `<p style="color:#E05C5C;font-size:12px;margin-top:8px">Analysis error: ${esc(docAn.error)}</p>`;
+  }
+
+  html += `<div style="margin-top:14px"><a href="${legistarUrl(matter)}" target="_blank" rel="noreferrer" style="font-size:11px;text-decoration:none">↗ View full record in Legistar</a></div>`;
+  html += `</div>`;
+  return html;
+}
+
+function renderAnalysis() {
+  if (!analysisData) return;
+  const s = analysisData.summary;
+  let html = `<div class="summary-grid">`;
+
+  // Type breakdown
+  html += `<div class="summary-card" style="grid-column:span 2">
+    <div class="card-label">Subsidy Type Breakdown</div>`;
+  for (const [t,n] of Object.entries(s.bySubsidyType||{}).sort((a,b)=>b[1]-a[1])) {
+    const c = COLORS[t]||'#6B8090';
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${c};flex-shrink:0"></div>
+      <span style="color:#C8D8E8;font-size:12px;flex:1">${esc(t)}</span>
+      <span style="color:#5A7A96;font-size:12px">${n}</span>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Themes
+  html += `<div class="summary-card"><div class="card-label">Key Themes</div><div>`;
+  for (const t of s.keyThemes||[]) html += pill(t,'#C9A84C');
+  html += `</div></div>`;
+
+  // Recipients
+  html += `<div class="summary-card"><div class="card-label">Notable Recipients</div><div>`;
+  if (s.notableRecipients?.length) { for (const r of s.notableRecipients) html += pill(r,'#4A9ABA'); }
+  else html += `<span style="color:#3A5A76;font-size:12px">None identified in titles</span>`;
+  html += `</div></div></div>`;
+
+  // Narrative
+  html += `<div class="narrative-card">
+    <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#C9A84C;margin-bottom:14px">✦ Policy Analysis</div>`;
+  for (const para of (s.analysisNarrative||'').split('\n\n')) {
+    html += `<p>${esc(para)}</p>`;
+  }
+  html += `<p style="font-size:11px;color:#3A5A76;border-top:1px solid #1E3448;padding-top:12px;margin-top:4px">
+    ⚠ Bulk analysis uses legislative titles only. Click rows in the Data Table to fetch source documents for precise amounts and terms.
+  </p></div>`;
+
+  document.getElementById('analysis-panel').innerHTML = html;
+}
+
+// ── Filtering / sorting ───────────────────────────────────────────────────────
+function setFilter(t) { filterType = t; renderTable(); }
+function setSort(k) {
+  if (sortKey===k) sortDir = sortDir==='asc'?'desc':'asc';
+  else { sortKey=k; sortDir='desc'; }
+  renderTable();
+}
+function sortArrow(col) {
+  if (sortKey!==col) return '<span style="opacity:0.3">⬍</span>';
+  return sortDir==='asc'?'▲':'▼';
+}
+function getFilteredSorted() {
+  return enriched
+    .filter(m => filterType==='All' || m._ai?.subsidyType===filterType)
+    .sort((a,b)=>{
+      let va,vb;
+      if (sortKey==='date')      {va=new Date(a.MatterIntroDate||0);vb=new Date(b.MatterIntroDate||0);}
+      else if (sortKey==='type') {va=a._ai?.subsidyType||'zzz';vb=b._ai?.subsidyType||'zzz';}
+      else if (sortKey==='recip'){va=a._ai?.recipient||'zzz';vb=b._ai?.recipient||'zzz';}
+      else                       {va=a.MatterTitle||'';vb=b.MatterTitle||'';}
+      return sortDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+    });
+}
+
+// ── Row expand ────────────────────────────────────────────────────────────────
+function toggleRow(mid) {
+  expandedRow = expandedRow===mid ? null : mid;
+  if (expandedRow && !attachments[mid]) fetchAttachments(mid);
+  renderTable();
+}
+
+// ── Attachments ───────────────────────────────────────────────────────────────
+async function fetchAttachments(mid) {
+  attachments[mid] = {status:'loading',files:[]};
+  renderTable();
+  try {
+    const r = await fetch(BASE(`${LEGISTAR}/matters/${mid}/attachments`));
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const files = (await r.json()).map(f=>({
+      id:f.MatterAttachmentId, name:f.MatterAttachmentName,
+      url:f.MatterAttachmentHyperlink, status:'idle', text:null
+    }));
+    attachments[mid] = {status:'loaded',files};
+  } catch(e) {
+    attachments[mid] = {status:'error',error:e.message,files:[]};
+  }
+  renderTable();
+}
+
+async function fetchDocument(mid, fid, url) {
+  const patchFile = p => {
+    attachments[mid].files = attachments[mid].files.map(f=>f.id===fid?{...f,...p}:f);
+    renderTable();
+  };
+  patchFile({status:'fetching'});
+  try {
+    const r = await fetch(url,{mode:'cors'});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const buf = await r.arrayBuffer();
+    const ct = r.headers.get('content-type')||'';
+    let text;
+    if (ct.includes('pdf')||url.toLowerCase().includes('.pdf')) {
+      text = await extractPdfText(buf);
+    } else {
+      text = new TextDecoder().decode(buf).slice(0,20000);
+    }
+    patchFile({status:'parsed',text});
+  } catch(e) {
+    patchFile({status:'blocked',error:e.message});
+  }
+}
+
+async function analyzeDocuments(mid) {
+  const matter = enriched.find(m=>m.MatterId===mid);
+  if (!matter) return;
+  const parsed = attachments[mid]?.files.filter(f=>f.status==='parsed'&&f.text);
+  if (!parsed?.length) return;
+  docAnalysis[mid] = {status:'analyzing'};
+  renderTable();
+  const text = parsed.map(f=>`--- ${f.name} ---\n${f.text.slice(0,8000)}`).join('\n\n');
+  const system = `You are a municipal finance and housing policy analyst. Respond ONLY in valid JSON — no markdown, no preamble.`;
+  const prompt = `Legislative matter: "${matter.MatterTitle}" (${fmtDate(matter.MatterIntroDate)})\n\nDocuments:\n${text}\n\nReturn JSON: { "subsidyType":"...", "recipient":"or null", "amount":"or null", "amountBreakdown":[], "purpose":"...", "term":"or null", "location":"or null", "councilDistrict":"or null", "conditions":[], "keyDates":[], "summary":"3-5 sentences" }`;
+  try {
+    const raw = await callClaude([{role:'user',content:prompt}], system, 2000);
+    const result = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    docAnalysis[mid] = {status:'done',result};
+  } catch(e) {
+    docAnalysis[mid] = {status:'error',error:e.message};
+  }
+  renderTable();
+}
+
+// ── Bulk analysis ─────────────────────────────────────────────────────────────
+async function runBulkAnalysis() {
+  const btn = document.getElementById('bulk-btn');
+  btn.textContent = 'Analyzing…'; btn.disabled = true;
+  const sample = matters.slice(0,120).map(m=>({id:m.MatterId,title:m.MatterTitle,type:m.MatterTypeName,status:m.MatterStatusName,date:(m.MatterIntroDate||'').slice(0,10)}));
+  const system = `You are an expert municipal finance and housing policy analyst. Respond ONLY in valid JSON.`;
+  const prompt = `Analyze Dallas Legistar records. Return: { "records":[{ "id":<MatterId>, "subsidyType":"...", "recipient":"or null", "purpose":"brief", "amount":"or null", "confidence":"high|medium|low", "notes":"or null" }], "summary":{ "totalRecords":n, "keyThemes":[], "bySubsidyType":{}, "notableRecipients":[], "amountsFound":n, "analysisNarrative":"3-4 paragraphs" } }\nRecords: ${JSON.stringify(sample,null,2)}`;
+  try {
+    const raw = await callClaude([{role:'user',content:prompt}], system, 8000);
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const byId = {}; (parsed.records||[]).forEach(r=>{byId[r.id]=r;});
+    enriched = matters.map(m=>({...m,_ai:byId[m.MatterId]||null}));
+    analysisData = parsed;
+    activeTab = 'analysis';
+    renderAll();
+  } catch(e) {
+    alert('Bulk analysis failed: ' + e.message);
+  } finally {
+    btn.textContent = '✦ Bulk Analysis'; btn.disabled = false;
+  }
+}
+
+// ── PDF.js ────────────────────────────────────────────────────────────────────
 let _pdfjs = null;
 function loadPdfJs() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (_pdfjs) return resolve(_pdfjs);
     if (window.pdfjsLib) {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       _pdfjs = window.pdfjsLib; return resolve(_pdfjs);
     }
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     s.onload = () => {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       _pdfjs = window.pdfjsLib; resolve(_pdfjs);
     };
     document.head.appendChild(s);
@@ -102,449 +598,15 @@ function loadPdfJs() {
 }
 async function extractPdfText(buffer) {
   const lib = await loadPdfJs();
-  const pdf = await lib.getDocument({ data: buffer }).promise;
-  let out = "";
-  for (let i = 1; i <= Math.min(pdf.numPages, 25); i++) {
+  const pdf = await lib.getDocument({data:buffer}).promise;
+  let out = '';
+  for (let i=1; i<=Math.min(pdf.numPages,25); i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    out += content.items.map(x => x.str).join(" ") + "\n";
+    out += content.items.map(x=>x.str).join(' ') + '\n';
   }
   return out.trim();
 }
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-const BASE = "https://webapi.legistar.com/v1/dallas";
-const SUBSIDY_TYPES = ["Grant","Loan","TIF","Tax Abatement","Tax Exemption","Tax Rebate","Tax Credit","Bond","Contract","Appropriation","CDBG","HOME","Section 8","Other"];
-const COLORS = {
-  "Grant":"#4AC4A0","Loan":"#4A9ABA","TIF":"#C9A84C","Tax Abatement":"#E07B4A",
-  "Tax Exemption":"#B07BC4","Tax Rebate":"#E05C5C","Tax Credit":"#7BC47F",
-  "Bond":"#C44A7B","Contract":"#84C4C4","Appropriation":"#C4A44A",
-  "CDBG":"#6BC47B","HOME":"#4A7BC4","Section 8":"#C4844A","Other":"#6B8090",
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmtDate = s => s ? new Date(s).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}) : "—";
-const legistarUrl = m => `https://dallas.legistar.com/LegislationDetail.aspx?ID=${m.MatterId}&GUID=${m.MatterGuid}`;
-
-async function callClaude(messages, system, maxTokens = 2000) {
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:maxTokens, system, messages }),
-  });
-  const d = await r.json();
-  return d.content?.find(c => c.type==="text")?.text || "";
-}
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const S = {
-  header:     { background:"linear-gradient(160deg,#0F2233 0%,#0C1923 100%)", borderBottom:"1px solid #1E3448", padding:"28px 20px 22px" },
-  eyebrow:    { fontSize:10, letterSpacing:"0.2em", color:"#C9A84C", textTransform:"uppercase", marginBottom:6 },
-  h1:         { fontFamily:"'Playfair Display','Georgia',serif", fontSize:22, fontWeight:700, color:"#EFF6FF", margin:"0 0 4px" },
-  subtitle:   { fontSize:11, color:"#7A9BB5" },
-  searchRow:  { display:"flex", gap:8, marginTop:16, alignItems:"stretch", flexWrap:"wrap" },
-  input:      { flex:1, minWidth:0, background:"#112030", border:"1px solid #2A4560", borderRadius:6, padding:"10px 12px", color:"#EFF6FF", fontFamily:"'DM Mono',monospace", fontSize:13, outline:"none" },
-  btnGold:    { background:"#C9A84C", color:"#0C1923", border:"none", borderRadius:6, padding:"10px 18px", fontFamily:"'DM Mono',monospace", fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" },
-  btnOutline: { background:"transparent", color:"#C9A84C", border:"1px solid #C9A84C", borderRadius:6, padding:"10px 14px", fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" },
-  btnSm:      { background:"#112030", color:"#7A9BB5", border:"1px solid #2A4560", borderRadius:4, padding:"5px 10px", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", whiteSpace:"nowrap" },
-  btnSmGold:  { background:"#C9A84C22", color:"#C9A84C", border:"1px solid #C9A84C55", borderRadius:4, padding:"5px 10px", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", whiteSpace:"nowrap" },
-  body:       { padding:"0 20px" },
-  statsBar:   { display:"flex", gap:20, padding:"14px 0", borderBottom:"1px solid #1E3448", flexWrap:"wrap", alignItems:"center" },
-  statLabel:  { fontSize:10, color:"#5A7A96", letterSpacing:"0.1em", textTransform:"uppercase" },
-  statVal:    { fontSize:18, color:"#EFF6FF", fontFamily:"'Playfair Display',serif", fontWeight:700 },
-  tabs:       { display:"flex", borderBottom:"1px solid #1E3448", marginTop:2 },
-  tab:        a => ({ padding:"10px 16px", fontFamily:"'DM Mono',monospace", fontSize:12, cursor:"pointer", border:"none", background:"transparent", color:a?"#C9A84C":"#5A7A96", borderBottom:a?"2px solid #C9A84C":"2px solid transparent", fontWeight:a?700:400 }),
-  filterRow:  { display:"flex", gap:6, padding:"12px 0", flexWrap:"wrap", alignItems:"center" },
-  chip:       a => ({ padding:"4px 10px", borderRadius:20, fontSize:11, cursor:"pointer", border:`1px solid ${a?"#C9A84C":"#2A4560"}`, background:a?"#C9A84C22":"transparent", color:a?"#C9A84C":"#7A9BB5", fontFamily:"'DM Mono',monospace" }),
-  table:      { width:"100%", borderCollapse:"collapse", fontSize:12 },
-  th:         { padding:"10px 10px", textAlign:"left", fontSize:10, letterSpacing:"0.1em", textTransform:"uppercase", color:"#5A7A96", borderBottom:"1px solid #1E3448", cursor:"pointer", userSelect:"none", whiteSpace:"nowrap" },
-  td:         { padding:"10px 10px", borderBottom:"1px solid #152535", verticalAlign:"top", lineHeight:1.5 },
-  expandBox:  { background:"#0F2233", borderBottom:"1px solid #1E3448", padding:"16px 20px" },
-  cardLabel:  { fontSize:10, letterSpacing:"0.12em", textTransform:"uppercase", color:"#5A7A96", marginBottom:6 },
-  card:       { background:"#0C1923", border:"1px solid #1E3448", borderRadius:6, padding:"14px 16px", marginTop:12 },
-  goldCard:   { background:"#0C1923", border:"1px solid #1E3448", borderLeft:"3px solid #C9A84C", borderRadius:6, padding:"16px 18px", marginTop:14 },
-  narrativeCard: { background:"#0F2233", border:"1px solid #1E3448", borderLeft:"3px solid #C9A84C", borderRadius:6, padding:"20px 24px", marginTop:20 },
-  summaryGrid:{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:14, marginTop:16 },
-  summaryCard:{ background:"#0F2233", border:"1px solid #1E3448", borderRadius:6, padding:"14px 16px" },
-  pill:       c => ({ display:"inline-block", background:`${c}22`, color:c, border:`1px solid ${c}44`, borderRadius:4, padding:"3px 8px", fontSize:11, margin:"2px 3px 2px 0" }),
-  note:       { fontSize:11, color:"#3A5A76", lineHeight:1.6 },
-  fileRow:    { display:"flex", alignItems:"center", gap:8, padding:"8px 0", borderBottom:"1px solid #152535", flexWrap:"wrap" },
-  dot:        c => ({ width:8, height:8, borderRadius:"50%", background:c, flexShrink:0 }),
-};
-
-function TypeBadge({ type }) {
-  const c = COLORS[type] || "#6B8090";
-  return <span style={{ background:`${c}22`, color:c, border:`1px solid ${c}55`, borderRadius:4, padding:"2px 7px", fontSize:11, fontWeight:600, letterSpacing:"0.04em", whiteSpace:"nowrap" }}>{type||"—"}</span>;
-}
-
-function ExpandedRow({ matter, att, docAn, onFetchDoc, onAnalyzeDocs }) {
-  const ai = matter._ai;
-  return (
-    <div style={S.expandBox}>
-      {ai && (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:12, marginBottom:14 }}>
-          <div><div style={S.cardLabel}>Purpose</div><div style={{ color:"#C8D8E8", fontSize:12 }}>{ai.purpose||"—"}</div></div>
-          <div><div style={S.cardLabel}>Amount in title</div><div style={{ color:ai.amount?"#4AC4A0":"#3A5A76", fontSize:12 }}>{ai.amount||"—"}</div></div>
-          <div><div style={S.cardLabel}>AI confidence</div><div style={{ fontSize:11, color:{high:"#4AC4A0",medium:"#C9A84C",low:"#E05C5C"}[ai.confidence]||"#6B8090" }}>● {ai.confidence||"—"}</div></div>
-        </div>
-      )}
-
-      <div style={{ ...S.cardLabel, marginBottom:8 }}>Source Documents</div>
-      {!att && <p style={{ color:"#5A7A96", fontSize:12 }}>Loading attachment list…</p>}
-      {att?.status==="loading" && <p style={{ color:"#5A7A96", fontSize:12 }}>Fetching…</p>}
-      {att?.status==="error"   && <p style={{ color:"#E05C5C", fontSize:12 }}>⚠ {att.error}</p>}
-      {att?.status==="loaded" && (
-        att.files.length===0
-          ? <p style={{ color:"#3A5A76", fontSize:12 }}>No attachments on this matter.</p>
-          : <>
-              {att.files.map(f => {
-                const dotColor = {idle:"#3A5A76",fetching:"#C9A84C",parsed:"#4AC4A0",blocked:"#E05C5C"}[f.status]||"#3A5A76";
-                return (
-                  <div key={f.id} style={S.fileRow}>
-                    <div style={S.dot(dotColor)} />
-                    <span style={{ flex:1, color:"#C8D8E8", fontSize:12, minWidth:120 }}>{f.name}</span>
-                    {f.status==="idle"     && <button style={S.btnSm} onClick={()=>onFetchDoc(f.id,f.url)}>Fetch PDF</button>}
-                    {f.status==="fetching" && <span style={{ color:"#C9A84C", fontSize:11 }}>Downloading…</span>}
-                    {f.status==="parsed"   && <span style={{ color:"#4AC4A0", fontSize:11 }}>✓ {Math.round((f.text?.length||0)/1000)}k chars</span>}
-                    {f.status==="blocked"  && <span style={{ color:"#E05C5C", fontSize:11 }}>CORS blocked</span>}
-                    <a href={f.url} target="_blank" rel="noreferrer" style={{ color:"#C9A84C", fontSize:11, textDecoration:"none" }}>↗ Open</a>
-                  </div>
-                );
-              })}
-              {att.files.some(f=>f.status==="parsed") && (
-                <div style={{ marginTop:12 }}>
-                  <button style={S.btnSmGold} disabled={docAn?.status==="analyzing"} onClick={onAnalyzeDocs}>
-                    {docAn?.status==="analyzing" ? "Analyzing…" : "✦ Analyze documents with AI"}
-                  </button>
-                </div>
-              )}
-              {att.files.every(f=>f.status==="blocked") && (
-                <p style={{ ...S.note, marginTop:8 }}>Files are CORS-blocked — use the ↗ Open links to read documents directly in Legistar.</p>
-              )}
-            </>
-      )}
-
-      {docAn?.status==="done" && docAn.result && (
-        <div style={S.goldCard}>
-          <div style={{ fontSize:10, letterSpacing:"0.16em", textTransform:"uppercase", color:"#C9A84C", marginBottom:14 }}>✦ Document Analysis</div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:12 }}>
-            {[
-              ["Subsidy Type", <TypeBadge type={docAn.result.subsidyType} />],
-              ["Recipient",    docAn.result.recipient],
-              ["Amount",       <span style={{ color:docAn.result.amount?"#4AC4A0":"#3A5A76", fontWeight:600 }}>{docAn.result.amount||"Not found"}</span>],
-              ["Purpose",      docAn.result.purpose],
-              ["Term",         docAn.result.term],
-              ["Location",     docAn.result.location],
-              ["District",     docAn.result.councilDistrict ? `District ${docAn.result.councilDistrict}` : null],
-            ].filter(([,v])=>v).map(([label,val])=>(
-              <div key={label}><div style={S.cardLabel}>{label}</div><div style={{ color:"#C8D8E8", fontSize:12 }}>{val}</div></div>
-            ))}
-          </div>
-          {docAn.result.amountBreakdown?.length>0 && (
-            <div style={{ marginTop:12 }}>
-              <div style={S.cardLabel}>Amount Breakdown</div>
-              {docAn.result.amountBreakdown.map(a=><span key={a} style={S.pill("#4AC4A0")}>{a}</span>)}
-            </div>
-          )}
-          {docAn.result.conditions?.length>0 && (
-            <div style={{ marginTop:12 }}>
-              <div style={S.cardLabel}>Conditions</div>
-              {docAn.result.conditions.map(c=><div key={c} style={{ fontSize:12, color:"#C8D8E8", marginBottom:4 }}>· {c}</div>)}
-            </div>
-          )}
-          {docAn.result.summary && (
-            <div style={{ marginTop:14, paddingTop:12, borderTop:"1px solid #1E3448" }}>
-              <div style={S.cardLabel}>Summary</div>
-              <p style={{ fontSize:12, color:"#C8D8E8", lineHeight:1.75, margin:0 }}>{docAn.result.summary}</p>
-            </div>
-          )}
-        </div>
-      )}
-      {docAn?.status==="error" && <p style={{ color:"#E05C5C", fontSize:12, marginTop:8 }}>Analysis error: {docAn.error}</p>}
-
-      <div style={{ marginTop:14 }}>
-        <a href={legistarUrl(matter)} target="_blank" rel="noreferrer" style={{ color:"#C9A84C", fontSize:11, textDecoration:"none" }}>↗ View full record in Legistar</a>
-      </div>
-    </div>
-  );
-}
-
-function App() {
-  const [keyword,     setKeyword]     = useState("");
-  const [matters,     setMatters]     = useState(null);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState(null);
-  const [analysis,    setAnalysis]    = useState(null);
-  const [analyzing,   setAnalyzing]   = useState(false);
-  const [activeTab,   setActiveTab]   = useState("table");
-  const [filterType,  setFilterType]  = useState("All");
-  const [sortKey,     setSortKey]     = useState("date");
-  const [sortDir,     setSortDir]     = useState("desc");
-  const [expandedRow, setExpandedRow] = useState(null);
-  const [attachments, setAttachments] = useState({});
-  const [docAnalysis, setDocAnalysis] = useState({});
-
-  const search = useCallback(async () => {
-    const q = keyword.trim(); if (!q) return;
-    setLoading(true); setError(null); setMatters(null);
-    setAnalysis(null); setAttachments({}); setDocAnalysis({});
-    setActiveTab("table"); setExpandedRow(null);
-    try {
-      const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear()-12);
-      const ds = cutoff.toISOString().split("T")[0];
-      const url = `${BASE}/matters?$filter=contains(MatterTitle,'${encodeURIComponent(q)}') and MatterIntroDate ge datetime'${ds}T00:00:00'&$top=1000&$orderby=MatterIntroDate desc`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`Legistar ${r.status}`);
-      setMatters(await r.json());
-    } catch(e) { setError(e.message); }
-    finally { setLoading(false); }
-  }, [keyword]);
-
-  const fetchAttachments = async (mid) => {
-    setAttachments(p=>({...p,[mid]:{status:"loading",files:[]}}));
-    try {
-      const r = await fetch(`${BASE}/matters/${mid}/attachments`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const files = (await r.json()).map(f=>({ id:f.MatterAttachmentId, name:f.MatterAttachmentName, url:f.MatterAttachmentHyperlink, status:"idle", text:null }));
-      setAttachments(p=>({...p,[mid]:{status:"loaded",files}}));
-    } catch(e) { setAttachments(p=>({...p,[mid]:{status:"error",error:e.message,files:[]}})); }
-  };
-
-  const fetchDocument = async (mid, fid, url) => {
-    const patch = p => setAttachments(prev=>({ ...prev, [mid]:{ ...prev[mid], files:prev[mid].files.map(f=>f.id===fid?{...f,...p}:f) } }));
-    patch({status:"fetching"});
-    try {
-      const r = await fetch(url,{mode:"cors"});
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const buf = await r.arrayBuffer();
-      const ct = r.headers.get("content-type")||"";
-      const text = (ct.includes("pdf")||url.toLowerCase().includes(".pdf")) ? await extractPdfText(buf) : new TextDecoder().decode(buf).slice(0,20000);
-      patch({status:"parsed",text});
-    } catch(e) { patch({status:"blocked",error:e.message}); }
-  };
-
-  const analyzeDocuments = async (matter) => {
-    const mid = matter.MatterId;
-    const parsed = attachments[mid]?.files.filter(f=>f.status==="parsed"&&f.text);
-    if (!parsed?.length) return;
-    setDocAnalysis(p=>({...p,[mid]:{status:"analyzing"}}));
-    const text = parsed.map(f=>`--- ${f.name} ---\n${f.text.slice(0,8000)}`).join("\n\n");
-    const system = `You are a municipal finance and housing policy analyst. Respond ONLY in valid JSON — no markdown, no preamble.`;
-    const prompt = `Legislative matter: "${matter.MatterTitle}" (${fmtDate(matter.MatterIntroDate)})\n\nDocuments:\n${text}\n\nReturn JSON: { "subsidyType":"...", "recipient":"or null", "amount":"or null", "amountBreakdown":[], "purpose":"...", "term":"or null", "location":"or null", "councilDistrict":"or null", "conditions":[], "keyDates":[], "summary":"3-5 sentences" }`;
-    try {
-      const raw = await callClaude([{role:"user",content:prompt}], system, 2000);
-      const result = JSON.parse(raw.replace(/```json|```/g,"").trim());
-      setDocAnalysis(p=>({...p,[mid]:{status:"done",result}}));
-    } catch(e) { setDocAnalysis(p=>({...p,[mid]:{status:"error",error:e.message}})); }
-  };
-
-  const toggleRow = (matter) => {
-    const mid = matter.MatterId;
-    if (expandedRow===mid) { setExpandedRow(null); return; }
-    setExpandedRow(mid);
-    if (!attachments[mid]) fetchAttachments(mid);
-  };
-
-  const runBulkAnalysis = async () => {
-    if (!matters?.length) return;
-    setAnalyzing(true); setAnalysis(null);
-    const sample = matters.slice(0,120).map(m=>({ id:m.MatterId, title:m.MatterTitle, type:m.MatterTypeName, status:m.MatterStatusName, date:(m.MatterIntroDate||"").slice(0,10) }));
-    const system = `You are an expert municipal finance and housing policy analyst. Respond ONLY in valid JSON.`;
-    const prompt = `Analyze Dallas Legistar records. Return: { "records":[{ "id":<MatterId>, "subsidyType":"...", "recipient":"or null", "purpose":"brief", "amount":"or null", "confidence":"high|medium|low", "notes":"or null" }], "summary":{ "totalRecords":n, "keyThemes":[], "bySubsidyType":{}, "notableRecipients":[], "amountsFound":n, "analysisNarrative":"3-4 paragraphs" } }\nRecords: ${JSON.stringify(sample,null,2)}`;
-    try {
-      const raw = await callClaude([{role:"user",content:prompt}], system, 8000);
-      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
-      const byId = {}; (parsed.records||[]).forEach(r=>{byId[r.id]=r;});
-      const enriched = matters.map(m=>({...m,_ai:byId[m.MatterId]||null}));
-      setAnalysis({enriched,summary:parsed.summary}); setActiveTab("analysis");
-    } catch(e) { setAnalysis({error:e.message}); }
-    finally { setAnalyzing(false); }
-  };
-
-  const rows = (() => {
-    if (!matters) return [];
-    const src = analysis?.enriched||matters.map(m=>({...m,_ai:null}));
-    return src.filter(m=>filterType==="All"||m._ai?.subsidyType===filterType)
-      .sort((a,b)=>{
-        let va,vb;
-        if (sortKey==="date")      {va=new Date(a.MatterIntroDate||0);vb=new Date(b.MatterIntroDate||0);}
-        else if (sortKey==="type") {va=a._ai?.subsidyType||"zzz";vb=b._ai?.subsidyType||"zzz";}
-        else if (sortKey==="recip"){va=a._ai?.recipient||"zzz";vb=b._ai?.recipient||"zzz";}
-        else                       {va=a.MatterTitle;vb=b.MatterTitle;}
-        return sortDir==="asc"?(va>vb?1:-1):(va<vb?1:-1);
-      });
-  })();
-
-  const toggleSort = k => { if(sortKey===k) setSortDir(d=>d==="asc"?"desc":"asc"); else{setSortKey(k);setSortDir("desc");} };
-  const SortIcon = ({col}) => <span style={{marginLeft:4,opacity:sortKey===col?1:0.3,fontSize:10}}>{sortKey===col?(sortDir==="asc"?"▲":"▼"):"⬍"}</span>;
-
-  return (
-    <div style={{ fontFamily:"'DM Mono','Fira Mono','Courier New',monospace", background:"#0C1923", color:"#C8D8E8", minHeight:"100vh", fontSize:13 }}>
-      {/* Header */}
-      <div style={S.header}>
-        <p style={S.eyebrow}>Dallas City Council · Legistar</p>
-        <h1 style={S.h1}>Public Investment Explorer</h1>
-        <p style={S.subtitle}>Search legislative records · fetch source documents · extract subsidy details with AI</p>
-        <div style={S.searchRow}>
-          <input style={S.input} value={keyword} onChange={e=>setKeyword(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&search()}
-            placeholder="Redbird, TIF, CDBG, Oak Cliff, tax abatement…" />
-          <button style={S.btnGold} onClick={search} disabled={loading||!keyword.trim()}>
-            {loading?"Searching…":"Search"}
-          </button>
-          {matters?.length>0 && (
-            <button style={S.btnOutline} onClick={runBulkAnalysis} disabled={analyzing}>
-              {analyzing?"Analyzing…":"✦ Bulk Analysis"}
-            </button>
-          )}
-        </div>
-        {error && <p style={{color:"#E05C5C",fontSize:12,marginTop:10}}>⚠ {error}</p>}
-      </div>
-
-      {/* Empty state */}
-      {!matters && !loading && (
-        <div style={{padding:"60px 20px",textAlign:"center",color:"#3A5A76"}}>
-          <div style={{fontSize:40,marginBottom:12}}>⌕</div>
-          <p style={{fontSize:14,marginBottom:8}}>Enter a keyword to search Dallas city records</p>
-          <p style={{fontSize:12}}><em>Try: Redbird · affordable housing · TIF · CDBG · Oak Cliff · tax abatement · PDC</em></p>
-        </div>
-      )}
-
-      {/* Results */}
-      {matters && (
-        <div style={S.body}>
-          <div style={S.statsBar}>
-            <div><div style={S.statLabel}>Records</div><div style={S.statVal}>{matters.length.toLocaleString()}</div></div>
-            {analysis?.summary && <>
-              <div><div style={S.statLabel}>With Amounts</div><div style={S.statVal}>{analysis.summary.amountsFound??"—"}</div></div>
-              <div>
-                <div style={S.statLabel}>Top Type</div>
-                <div style={{fontSize:13,color:"#EFF6FF",paddingTop:2}}>{Object.entries(analysis.summary.bySubsidyType||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||"—"}</div>
-              </div>
-            </>}
-            <div style={{flex:1}}/>
-            <div style={{fontSize:11,color:"#3A5A76"}}>Click any row to fetch attachments</div>
-          </div>
-
-          <div style={S.tabs}>
-            <button style={S.tab(activeTab==="table")} onClick={()=>setActiveTab("table")}>Data Table</button>
-            <button style={S.tab(activeTab==="analysis")} onClick={()=>setActiveTab("analysis")} disabled={!analysis}>
-              Bulk Analysis{!analysis?" (run above)":""}
-            </button>
-          </div>
-
-          {activeTab==="table" && (
-            <>
-              {analysis?.enriched && (
-                <div style={S.filterRow}>
-                  <button style={S.chip(filterType==="All")} onClick={()=>setFilterType("All")}>All</button>
-                  {SUBSIDY_TYPES.filter(t=>analysis.enriched.some(m=>m._ai?.subsidyType===t)).map(t=>(
-                    <button key={t} style={S.chip(filterType===t)} onClick={()=>setFilterType(t)}>{t}</button>
-                  ))}
-                </div>
-              )}
-              <p style={{...S.note,padding:"8px 0"}}>
-                {analysis ? `${rows.length} records · Click a row to fetch source documents for precise amounts and terms.` : `${rows.length} records · Click any row to load attachments. Run Bulk Analysis to classify by subsidy type.`}
-              </p>
-              <div style={{overflowX:"auto"}}>
-                <table style={S.table}>
-                  <thead>
-                    <tr>
-                      <th style={S.th} onClick={()=>toggleSort("date")}>Date <SortIcon col="date"/></th>
-                      <th style={S.th} onClick={()=>toggleSort("title")}>Title <SortIcon col="title"/></th>
-                      <th style={S.th}>Type</th>
-                      {analysis && <th style={S.th} onClick={()=>toggleSort("type")}>Subsidy <SortIcon col="type"/></th>}
-                      {analysis && <th style={S.th} onClick={()=>toggleSort("recip")}>Recipient <SortIcon col="recip"/></th>}
-                      {analysis && <th style={S.th}>$</th>}
-                      <th style={S.th}>Docs</th>
-                      <th style={S.th}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map(m => {
-                      const mid=m.MatterId, att=attachments[mid], docAn=docAnalysis[mid], open=expandedRow===mid;
-                      const docsCell = !att ? <span style={{color:"#3A5A76"}}>—</span>
-                        : att.status==="loading" ? <span style={{color:"#C9A84C",fontSize:11}}>…</span>
-                        : att.status==="error"   ? <span style={{color:"#E05C5C",fontSize:11}}>⚠</span>
-                        : (() => { const n=att.files.length,p=att.files.filter(f=>f.status==="parsed").length;
-                            return <span style={{fontSize:11,color:p>0?"#4AC4A0":"#7A9BB5"}}>{n} file{n!==1?"s":""}{p>0?` · ${p} read`:""}{docAn?.status==="done"?" ✦":""}</span>; })();
-                      return (
-                        <React.Fragment key={mid}>
-                          <tr style={{cursor:"pointer",background:open?"#0F2233":"transparent"}} onClick={()=>toggleRow(m)}>
-                            <td style={{...S.td,whiteSpace:"nowrap",color:"#7A9BB5"}}>{fmtDate(m.MatterIntroDate)}</td>
-                            <td style={{...S.td,maxWidth:280}}><span style={{color:"#D8E8F8"}}>{m.MatterTitle}</span></td>
-                            <td style={{...S.td,color:"#7A9BB5",fontSize:11,whiteSpace:"nowrap"}}>{m.MatterTypeName||"—"}</td>
-                            {analysis && <td style={S.td}>{m._ai?<TypeBadge type={m._ai.subsidyType}/>:<span style={{color:"#3A5A76"}}>—</span>}</td>}
-                            {analysis && <td style={{...S.td,fontSize:11,color:"#C8D8E8",maxWidth:140}}>{m._ai?.recipient||<span style={{color:"#3A5A76"}}>—</span>}</td>}
-                            {analysis && <td style={{...S.td,color:m._ai?.amount?"#4AC4A0":"#3A5A76",fontSize:12,whiteSpace:"nowrap"}}>{m._ai?.amount||"—"}</td>}
-                            <td style={S.td}>{docsCell}</td>
-                            <td style={{...S.td,fontSize:11,color:"#5A7A96",whiteSpace:"nowrap"}}>{m.MatterStatusName||"—"}</td>
-                          </tr>
-                          {open && (
-                            <tr key={`exp-${mid}`}>
-                              <td colSpan={analysis?8:5} style={{padding:0}}>
-                                <ExpandedRow matter={m} att={att} docAn={docAn}
-                                  onFetchDoc={(fid,url)=>fetchDocument(mid,fid,url)}
-                                  onAnalyzeDocs={()=>analyzeDocuments(m)} />
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                {rows.length===0 && <div style={{textAlign:"center",padding:40,color:"#3A5A76"}}>No records match your filter.</div>}
-              </div>
-            </>
-          )}
-
-          {activeTab==="analysis" && analysis && !analysis.error && (
-            <div>
-              <div style={S.summaryGrid}>
-                <div style={{...S.summaryCard,gridColumn:"span 2"}}>
-                  <div style={S.cardLabel}>Subsidy Type Breakdown</div>
-                  {Object.entries(analysis.summary.bySubsidyType||{}).sort((a,b)=>b[1]-a[1]).map(([t,n])=>(
-                    <div key={t} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                      <div style={{width:10,height:10,borderRadius:2,background:COLORS[t]||"#6B8090",flexShrink:0}}/>
-                      <span style={{color:"#C8D8E8",fontSize:12,flex:1}}>{t}</span>
-                      <span style={{color:"#5A7A96",fontSize:12}}>{n}</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={S.summaryCard}>
-                  <div style={S.cardLabel}>Key Themes</div>
-                  <div>{(analysis.summary.keyThemes||[]).map(t=><span key={t} style={S.pill("#C9A84C")}>{t}</span>)}</div>
-                </div>
-                <div style={S.summaryCard}>
-                  <div style={S.cardLabel}>Notable Recipients</div>
-                  <div>
-                    {(analysis.summary.notableRecipients||[]).map(r=><span key={r} style={S.pill("#4A9ABA")}>{r}</span>)}
-                    {!analysis.summary.notableRecipients?.length && <span style={{color:"#3A5A76",fontSize:12}}>None identified in titles</span>}
-                  </div>
-                </div>
-              </div>
-              <div style={S.narrativeCard}>
-                <div style={{fontSize:10,letterSpacing:"0.16em",textTransform:"uppercase",color:"#C9A84C",marginBottom:14}}>✦ Policy Analysis</div>
-                {(analysis.summary.analysisNarrative||"").split("\n\n").map((p,i)=>(
-                  <p key={i} style={{margin:"0 0 14px",color:"#C8D8E8",lineHeight:1.8,fontSize:13}}>{p}</p>
-                ))}
-                <p style={{...S.note,borderTop:"1px solid #1E3448",paddingTop:12,marginTop:16}}>
-                  ⚠ Bulk analysis uses legislative titles only. Click individual rows to fetch source documents for precise amounts and terms.
-                </p>
-              </div>
-            </div>
-          )}
-          {activeTab==="analysis" && analysis?.error && <p style={{color:"#E05C5C",marginTop:20}}>Analysis failed: {analysis.error}</p>}
-          <div style={{height:40}}/>
-        </div>
-      )}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
-
 </body>
 </html>
