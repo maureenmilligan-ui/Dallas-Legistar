@@ -168,26 +168,39 @@ function checkPw() {
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LEGISTAR = 'https://webapi.legistar.com/v1/dallas';
 
-// Try direct first, then fall back through proxies
+// Try multiple strategies to reach Legistar
 async function legistarFetch(path) {
   const direct = LEGISTAR + path;
-  const proxies = [
-    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
-    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-  ];
-  // Try direct
+
+  // Strategy 1: direct (works if Legistar allows CORS)
   try {
-    const r = await fetch(direct);
-    if (r.ok) return r;
+    const r = await fetch(direct, { mode: 'cors' });
+    if (r.ok) return { ok: true, json: () => r.json() };
   } catch(e) {}
-  // Try each proxy
-  for (const proxy of proxies) {
-    try {
-      const r = await fetch(proxy(direct));
-      if (r.ok) return r;
-    } catch(e) {}
-  }
-  throw new Error('Could not reach Legistar API. Check your internet connection.');
+
+  // Strategy 2: corsproxy.io
+  try {
+    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(direct));
+    if (r.ok) return { ok: true, json: () => r.json() };
+  } catch(e) {}
+
+  // Strategy 3: allorigins (wraps response in JSON)
+  try {
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(direct));
+    if (r.ok) {
+      const wrapper = await r.json();
+      const data = JSON.parse(wrapper.contents);
+      return { ok: true, json: () => Promise.resolve(data) };
+    }
+  } catch(e) {}
+
+  // Strategy 4: thingproxy
+  try {
+    const r = await fetch('https://thingproxy.freeboard.io/fetch/' + direct);
+    if (r.ok) return { ok: true, json: () => r.json() };
+  } catch(e) {}
+
+  throw new Error('Could not reach Legistar API — all proxies failed. Try again in a moment.');
 }
 const SUBSIDY_TYPES = ['Grant','Loan','TIF','Tax Abatement','Tax Exemption','Tax Rebate','Tax Credit','Bond','Contract','Appropriation','CDBG','HOME','Section 8','Other'];
 const COLORS = {
