@@ -248,7 +248,7 @@ async function doSearch() {
   try {
     const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear()-12);
     const ds = cutoff.toISOString().split('T')[0];
-    const r = await legistarFetch(`/matters?$filter=contains(MatterTitle,'${encodeURIComponent(q)}') and MatterIntroDate ge datetime'${ds}T00:00:00'&$top=1000&$orderby=MatterIntroDate desc`);
+    const r = await legistarFetch(`/matters?$filter=substringof('${encodeURIComponent(q)}',MatterTitle) eq true and MatterIntroDate ge datetime'${ds}T00:00:00'&$top=1000&$orderby=MatterIntroDate desc`);
     if (!r.ok) throw new Error(`Legistar error ${r.status}`);
     matters = await r.json();
     enriched = matters.map(m=>({...m,_ai:null}));
