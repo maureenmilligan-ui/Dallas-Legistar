@@ -167,8 +167,28 @@ function checkPw() {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LEGISTAR = 'https://webapi.legistar.com/v1/dallas';
-const PROXY = 'https://corsproxy.io/?';
-const BASE = url => PROXY + encodeURIComponent(url);
+
+// Try direct first, then fall back through proxies
+async function legistarFetch(path) {
+  const direct = LEGISTAR + path;
+  const proxies = [
+    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  ];
+  // Try direct
+  try {
+    const r = await fetch(direct);
+    if (r.ok) return r;
+  } catch(e) {}
+  // Try each proxy
+  for (const proxy of proxies) {
+    try {
+      const r = await fetch(proxy(direct));
+      if (r.ok) return r;
+    } catch(e) {}
+  }
+  throw new Error('Could not reach Legistar API. Check your internet connection.');
+}
 const SUBSIDY_TYPES = ['Grant','Loan','TIF','Tax Abatement','Tax Exemption','Tax Rebate','Tax Credit','Bond','Contract','Appropriation','CDBG','HOME','Section 8','Other'];
 const COLORS = {
   'Grant':'#4AC4A0','Loan':'#4A9ABA','TIF':'#C9A84C','Tax Abatement':'#E07B4A',
@@ -228,8 +248,7 @@ async function doSearch() {
   try {
     const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear()-12);
     const ds = cutoff.toISOString().split('T')[0];
-    const url = BASE(`${LEGISTAR}/matters?$filter=contains(MatterTitle,'${encodeURIComponent(q)}') and MatterIntroDate ge datetime'${ds}T00:00:00'&$top=1000&$orderby=MatterIntroDate desc`);
-    const r = await fetch(url);
+    const r = await legistarFetch(`/matters?$filter=contains(MatterTitle,'${encodeURIComponent(q)}') and MatterIntroDate ge datetime'${ds}T00:00:00'&$top=1000&$orderby=MatterIntroDate desc`);
     if (!r.ok) throw new Error(`Legistar error ${r.status}`);
     matters = await r.json();
     enriched = matters.map(m=>({...m,_ai:null}));
@@ -500,7 +519,7 @@ async function fetchAttachments(mid) {
   attachments[mid] = {status:'loading',files:[]};
   renderTable();
   try {
-    const r = await fetch(BASE(`${LEGISTAR}/matters/${mid}/attachments`));
+    const r = await legistarFetch(`/matters/${mid}/attachments`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const files = (await r.json()).map(f=>({
       id:f.MatterAttachmentId, name:f.MatterAttachmentName,
